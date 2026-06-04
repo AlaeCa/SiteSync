@@ -5,7 +5,7 @@ import ma.ac.esi.sitesync.material_stock.model.Material;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MaterialMapper {
+public class  MaterialMapper {
 
     public MaterialDTO toDTO(Material material) {
         if (material == null) {
