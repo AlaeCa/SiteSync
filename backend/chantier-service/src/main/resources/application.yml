@@ -1,0 +1,42 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /api/chantiers
+ 
+spring:
+  application:
+    name: chantier-service
+  data:
+    mongodb:
+      spring.mongo.uri: ${MONGODB_URI:mongodb://localhost:27017/sitesync}
+      spring.mongodb.database: sitesync
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 20MB
+      max-request-size: 100MB
+ 
+firebase:
+  credentials-path: ${FIREBASE_CREDENTIALS_PATH:src/main/resources/firebase-service-account.json}
+ 
+storage:
+  upload-dir: ${UPLOAD_DIR:./uploads}
+ 
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+ 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+ 
+logging:
+  level:
+    ma.ac.esi.chantier: DEBUG

@@ -1,0 +1,12 @@
+# Build Maven
+target/
+
+# Firebase - NE JAMAIS COMMITTER
+src/main/resources/firebase-service-account.json
+src/main/resources/*.json
+
+# Eclipse
+.classpath
+.project
+.settings/
+
