@@ -10,4 +10,6 @@ import java.util.List;
 public interface RapportRepository extends MongoRepository<Rapport, String> {
 
     List<Rapport> findByChantierIdOrderByDateDesc(String chantierId);
+
+
 }

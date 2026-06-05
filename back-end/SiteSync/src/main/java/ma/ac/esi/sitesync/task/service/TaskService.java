@@ -64,6 +64,12 @@ public class TaskService {
         repo.updateStatut(new ObjectId(id), statut);
 
     }
+
+    public List<TaskResponseDto> getTachesByChantierId(String chantierId) {
+        List<Task> tasks = repo.findByChantierId(chantierId);
+
+        return tasks.stream().map(mapper::toResponseDto).toList();
+    }
 }
 
 

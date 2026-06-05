@@ -6,6 +6,7 @@ import ma.ac.esi.sitesync.task.dto.TaskResponseDto;
 import ma.ac.esi.sitesync.task.dto.TaskUpdateDto;
 
 import ma.ac.esi.sitesync.task.dto.TaskUpdateStatusDto;
+import ma.ac.esi.sitesync.task.model.Task;
 import ma.ac.esi.sitesync.task.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -72,6 +73,13 @@ public class TaskController {
         service.delete(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/planning/{chantierId}")
+    public ResponseEntity<List<TaskResponseDto>> getTachesByChantierId(
+            @PathVariable String chantierId) {
+
+        return ResponseEntity.ok(service.getTachesByChantierId(chantierId));
     }
 
 
