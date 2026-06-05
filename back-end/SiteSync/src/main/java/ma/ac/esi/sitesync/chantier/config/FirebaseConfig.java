@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import jakarta.annotation.PostConstruct;
+import org.springframework.core.io.ClassPathResource;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,18 +17,24 @@ import java.io.InputStream;
 @Slf4j
 public class FirebaseConfig {
  
-    @Value("${firebase.credentials-path}")
-    private String credentialsPath;
+
  
     @PostConstruct  // Méthode exécutée automatiquement au démarrage de l'application
-    public void initFirebase() throws IOException {
-        if (FirebaseApp.getApps().isEmpty()) {
-            InputStream credentials = new FileInputStream(credentialsPath);
+    public void initFireBase() {
+        try {
+            InputStream serviceAccount =
+                    new ClassPathResource("next-app-1f2b9-firebase-adminsdk-fbsvc-07a85ed3ea.json").getInputStream();
+
             FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(credentials))
-                .build();
-            FirebaseApp.initializeApp(options);
-            log.info("Firebase Admin SDK initialisé avec succès");
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .build();
+
+            if (FirebaseApp.getApps().isEmpty()) {
+                FirebaseApp.initializeApp(options);
+                System.out.println("Firebase initialisé avec succès");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 import java.util.List;
  
 @RestController
-@RequestMapping("/")   // context-path = /api/chantiers (dans application.yml)
+@RequestMapping("/api/chantier")   // context-path = /api/chantiers (dans application.yml)
 @RequiredArgsConstructor
 @Tag(name = "Chantiers", description = "API de gestion des chantiers BTP")
 public class ChantierController {

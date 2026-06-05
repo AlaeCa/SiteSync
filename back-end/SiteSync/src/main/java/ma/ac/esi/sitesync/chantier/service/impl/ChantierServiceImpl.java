@@ -10,6 +10,7 @@ import ma.ac.esi.sitesync.chantier.model.Chantier;
 import ma.ac.esi.sitesync.chantier.model.StatutChantier;
 import ma.ac.esi.sitesync.chantier.repository.ChantierRepository;
 import ma.ac.esi.sitesync.chantier.service.interfaces.ChantierService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,8 +23,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ChantierServiceImpl implements ChantierService {
- 
+
+    @Autowired
     private final ChantierRepository repository;
+    @Autowired
     private final ChantierMapper mapper;
  
     @Value("${storage.upload-dir}")
