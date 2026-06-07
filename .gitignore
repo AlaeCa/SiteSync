@@ -1,0 +1,8 @@
+# Mobile
+mobile/node_modules/
+mobile/.expo/
+
+# Backoffice
+backoffice/node_modules/
+backoffice/.angular/
+backoffice/.vscode/
