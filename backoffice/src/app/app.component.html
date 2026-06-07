@@ -1,0 +1,63 @@
+<div *ngIf="router.url === '/login'; else mainLayout">
+  <router-outlet></router-outlet>
+</div>
+
+<ng-template #mainLayout>
+  <div class="app-container">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2 class="brand">SiteSync</h2>
+        <p class="brand-sub">Backoffice Admin</p>
+      </div>
+      <nav class="nav-menu">
+        <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
+          <mat-icon>dashboard</mat-icon>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" routerLink="/users" routerLinkActive="active">
+          <mat-icon>people</mat-icon>
+          <span>Users</span>
+        </a>
+        <a class="nav-item" routerLink="/construction-sites" routerLinkActive="active">
+          <mat-icon>construction</mat-icon>
+          <span>Construction sites</span>
+        </a>
+        <a class="nav-item" routerLink="/stock" routerLinkActive="active">
+          <mat-icon>inventory</mat-icon>
+          <span>Stock</span>
+        </a>
+        <a class="nav-item" routerLink="/planning" routerLinkActive="active">
+          <mat-icon>calendar_today</mat-icon>
+          <span>Planning</span>
+        </a>
+        <a class="nav-item logout" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Déconnexion</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div class="search-bar">
+          <mat-icon>search</mat-icon>
+          <input type="text" 
+  placeholder="Search users" 
+  [(ngModel)]="searchTerm"
+  (input)="onSearch(searchTerm)" />
+        </div>
+        <div class="topbar-actions">
+          <mat-icon>notifications</mat-icon>
+          <span style="font-size:13px; color:#666; margin-right:4px;">{{ adminName }}</span>
+          <div class="avatar" [title]="adminName"
+            style="width:36px; height:36px; border-radius:50%; background:#1a1f2e; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; cursor:pointer;">
+            {{ adminInitials || '?' }}
+          </div>
+        </div>
+      </div>
+      <div class="page-content">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  </div>
+</ng-template>

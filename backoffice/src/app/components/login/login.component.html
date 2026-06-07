@@ -1,0 +1,38 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1 class="brand">SiteSync</h1>
+      <p class="brand-sub">Backoffice Admin</p>
+    </div>
+
+    <div class="login-form">
+      <h2>Connexion</h2>
+      <p style="color:#aaa; margin-bottom:24px;">Réservé aux administrateurs</p>
+
+      <div class="form-group">
+        <label>Email</label>
+        <div class="input-wrapper">
+          <mat-icon>email</mat-icon>
+          <input type="email" [(ngModel)]="email" placeholder="admin@sitesync.com" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <div class="input-wrapper">
+          <mat-icon>lock</mat-icon>
+          <input type="password" [(ngModel)]="password" placeholder="••••••••" (keyup.enter)="login()" />
+        </div>
+      </div>
+
+      <div *ngIf="error" class="error-msg">
+        <mat-icon>error</mat-icon> {{ error }}
+      </div>
+
+      <button class="login-btn" (click)="login()" [disabled]="loading">
+        <mat-spinner *ngIf="loading" diameter="20" style="display:inline-block;"></mat-spinner>
+        <span *ngIf="!loading">Se connecter</span>
+      </button>
+    </div>
+  </div>
+</div>

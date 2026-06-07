@@ -1,0 +1,126 @@
+<!-- Header + Filtres -->
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+  <div>
+    <h1 style="color:#ff9800; font-size:26px; font-weight:700;">👥 Gestion des Utilisateurs</h1>
+    <p style="color:#666; margin-top:4px;">
+      {{ filteredUsers.length }} utilisateur(s) affiché(s) sur {{ users.length }}
+    </p>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <button mat-raised-button
+      [style.background]="statusFilter === 'ALL' ? '#1a1f2e' : 'white'"
+      [style.color]="statusFilter === 'ALL' ? 'white' : '#666'"
+      [style.border]="statusFilter !== 'ALL' ? '1px solid #e0e0e0' : 'none'"
+      (click)="onStatusFilter('ALL')">
+      Tous ({{ users.length }})
+    </button>
+    <button mat-raised-button
+      [style.background]="statusFilter === 'ACTIVE' ? '#2ecc71' : 'white'"
+      [style.color]="statusFilter === 'ACTIVE' ? 'white' : '#2ecc71'"
+      [style.border]="statusFilter !== 'ACTIVE' ? '1px solid #2ecc71' : 'none'"
+      (click)="onStatusFilter('ACTIVE')">
+      ✅ Actifs
+    </button>
+    <button mat-raised-button
+      [style.background]="statusFilter === 'SUSPENDED' ? '#e74c3c' : 'white'"
+      [style.color]="statusFilter === 'SUSPENDED' ? 'white' : '#e74c3c'"
+      [style.border]="statusFilter !== 'SUSPENDED' ? '1px solid #e74c3c' : 'none'"
+      (click)="onStatusFilter('SUSPENDED')">
+      🚫 Suspendus
+    </button>
+  </div>
+</div>
+
+<!-- Table -->
+<mat-card style="background: white; border-radius: 16px; border: 1px solid #e0e0e0; overflow:hidden;">
+  <mat-card-content style="padding:0;">
+
+    <div *ngIf="loading" style="text-align:center; padding: 60px;">
+      <mat-spinner diameter="50" style="margin: auto;"></mat-spinner>
+    </div>
+
+    <div *ngIf="!loading && filteredUsers.length === 0" style="text-align:center; padding:60px; color:#aaa;">
+      <mat-icon style="font-size:48px; width:48px; height:48px;">search_off</mat-icon>
+      <p style="margin-top:12px; font-size:16px;">Aucun utilisateur trouvé</p>
+    </div>
+
+    <table *ngIf="!loading && filteredUsers.length > 0" mat-table [dataSource]="filteredUsers" style="width:100%; background:transparent;">
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef style="color:#ff9800; background:#f5f6fa; font-weight:700; padding:16px;">Utilisateur</th>
+        <td mat-cell *matCellDef="let user" style="padding:14px 16px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:40px; height:40px; border-radius:50%; background:#1a1f2e; display:flex; align-items:center; justify-content:center; font-weight:bold; color:white; font-size:15px; flex-shrink:0;">
+              {{ user.name?.charAt(0)?.toUpperCase() }}
+            </div>
+            <div>
+              <div style="font-weight:600; color:#333;">{{ user.name }}</div>
+              <div style="font-size:12px; color:#aaa;">ID: {{ user.id?.substring(0,8) }}...</div>
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef style="color:#ff9800; background:#f5f6fa; font-weight:700;">Email</th>
+        <td mat-cell *matCellDef="let user" style="color:#666;">{{ user.email }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="role">
+        <th mat-header-cell *matHeaderCellDef style="color:#ff9800; background:#f5f6fa; font-weight:700;">Rôle</th>
+        <td mat-cell *matCellDef="let user">
+          <mat-select [(value)]="user.role" (selectionChange)="changeRole(user, $event.value)"
+            style="width:110px; font-size:13px;">
+            <mat-option value="CHEF">CHEF</mat-option>
+            <mat-option value="ADMIN">ADMIN</mat-option>
+          </mat-select>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef style="color:#ff9800; background:#f5f6fa; font-weight:700;">Statut</th>
+        <td mat-cell *matCellDef="let user">
+          <span style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600;"
+            [style.background]="user.status === 'ACTIVE' ? 'rgba(46,204,113,0.15)' : 'rgba(231,76,60,0.15)'"
+            [style.color]="user.status === 'ACTIVE' ? '#2ecc71' : '#e74c3c'"
+            [style.border]="user.status === 'ACTIVE' ? '1px solid #2ecc71' : '1px solid #e74c3c'">
+            {{ user.status === 'ACTIVE' ? '● Actif' : '● Suspendu' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef style="color:#ff9800; background:#f5f6fa; font-weight:700;">Membre depuis</th>
+        <td mat-cell *matCellDef="let user" style="color:#666; font-size:13px;">
+          {{ user.createdAt | date:'dd/MM/yyyy' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef style="color:#ff9800; background:#f5f6fa; font-weight:700;">Actions</th>
+        <td mat-cell *matCellDef="let user">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button mat-raised-button
+              [color]="user.status === 'ACTIVE' ? 'warn' : 'primary'"
+              (click)="toggleStatus(user)"
+              style="font-size:11px; min-width:90px;">
+              {{ user.status === 'ACTIVE' ? 'Suspendre' : 'Activer' }}
+            </button>
+            <button mat-icon-button color="accent" (click)="viewDetail(user.id)" title="Voir détails">
+              <mat-icon>visibility</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+        style="border-bottom: 1px solid #f0f0f0; transition: background 0.2s;"
+        (mouseenter)="row.hovered = true"
+        (mouseleave)="row.hovered = false"
+        [style.background]="row.hovered ? '#fff9f0' : 'white'">
+      </tr>
+    </table>
+
+  </mat-card-content>
+</mat-card>
