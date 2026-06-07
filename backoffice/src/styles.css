@@ -1,0 +1,22 @@
+:root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --mouv: #020d4b;
+    --border: #e3e7ee;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --accent: #ea6a0a;
+    --accent1: #ea6a0a;
+    --accent-hover: #020d4b;
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #f01f1f;
+    --header: #1e293b;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}

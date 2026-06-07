@@ -1,0 +1,22 @@
+<h2>Tableau de bord — Stock</h2>
+
+@if (!stats) {
+  <p>Chargement des statistiques…</p>
+}
+
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3>Répartition des statuts des matériaux</h3>
+    <canvas #statusPie></canvas>
+  </div>
+
+  <div class="chart-card">
+    <h3>Valeur totale par catégorie (DH)</h3>
+    <canvas #categoryBar></canvas>
+  </div>
+
+  <div class="chart-card">
+    <h3>Quantité par matériau</h3>
+    <canvas #quantityBar></canvas>
+  </div>
+</div>

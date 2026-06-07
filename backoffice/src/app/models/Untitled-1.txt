@@ -1,0 +1,17 @@
+const escapeHTML = (str) =>
+  str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+function html(strings, ...values) {
+  return strings.reduce((acc, str, i) => {
+    const val = values[i] ? escapeHTML(values[i]) : "";
+    return acc + str + val;
+  }, "");
+}
+
+const userInput = '<script>alert("XSS")</script>';
+console.log(html`Input: ${userInput}`);

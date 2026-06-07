@@ -1,0 +1,161 @@
+<main class="content">
+  <app-dashboard></app-dashboard>
+<div class="materials-header">
+  <h1>Matériaux</h1>
+  <button class="btn-add" (click)="onAdd()">+ Ajouter matériau</button>
+</div>
+<div class="filters">
+  <input type="text" placeholder="Rechercher un matériau..."
+         [(ngModel)]="searchTerm" name="search" />
+
+  <select [(ngModel)]="statusFilter" name="statusFilter">
+    <option value="">Tous les statuts</option>
+    <option value="DISPONIBLE">Disponible</option>
+    <option value="FAIBLE">Faible</option>
+    <option value="EN_RUPTURE">En rupture</option>
+  </select>
+
+  <select [(ngModel)]="categoryFilter" name="categoryFilter">
+    <option value="">Toutes les catégories</option>
+    @for (cat of categories; track cat) {
+      <option [value]="cat">{{ cat }}</option>
+    }
+  </select>
+</div>
+
+@if (filteredMaterials.length === 0){
+  <p>Aucun matériau ne correspond.</p>
+} 
+@else {
+  <div class="materials-grid">
+    @for (m of filteredMaterials; track m.id) {
+      <!-- ... ta carte de matériau (inchangée) ... -->
+    }
+  </div>
+}
+
+@if (filteredMaterials.length === 0) {
+  <p>Aucun matériau pour le moment.</p>
+} @else {
+  <div class="materials-grid">
+    @for (m of filteredMaterials; track m.id) {
+      <div class="material-card">
+        <div class="card-header">
+          <h3>{{ m.name }}</h3>
+          <span [class]="'badge badge-' + m.status.toLowerCase()">
+            {{ statusLabel(m.status) }}
+          </span>
+        </div>
+        <p class="category">{{ m.category }}</p>
+        <div class="info">
+          <span>Quantité : <strong>{{ m.quantity }} {{ m.unit }}</strong></span>
+          <span>Seuil : {{ m.seuilminal }}</span>
+          <span>Prix : {{ m.unitPrice }} DH</span>
+        </div>
+        <div class="actions">
+          <button class="btn-edit" (click)="onEdit(m)">Modifier</button>
+          <button class="btn-delete" (click)="onDelete(m)">Supprimer</button>
+          <button class="btn-move" (click)="onMovement(m)">Mouvement</button>
+        </div>
+      </div>
+    }
+  </div>
+
+@if (showForm) {
+  <div class="modal-overlay" (click)="closeForm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>{{ editingId ? 'Modifier le matériau' : 'Ajouter un matériau' }}</h2>
+
+      <label>Nom
+        <input [(ngModel)]="formMaterial.name" name="name" />
+      </label>
+      <label>Catégorie
+          <select [(ngModel)]="formMaterial.category" name="category">
+            <option value="" disabled selected>-- Choisir une catégorie --</option>
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+      </label>
+      <label>Quantité
+        <input type="number" [(ngModel)]="formMaterial.quantity" name="quantity" />
+      </label>
+      <label>Unité
+        <select [(ngModel)]="formMaterial.unit" name="unit">
+        <option value="" disabled selected>-- Choisir une unité --</option>
+        @for (u of units; track u) {
+          <option [value]="u">{{ u }}</option>
+          }
+        </select>
+      </label>
+    
+      <label>Seuil minimal
+        <input type="number" [(ngModel)]="formMaterial.seuilminal" name="seuilminal" />
+      </label>
+      <label>Site
+        <input [(ngModel)]="formMaterial.siteId" name="siteId" />
+      </label>
+      <label>Prix unitaire
+        <input type="number" [(ngModel)]="formMaterial.unitPrice" name="unitPrice" />
+      </label>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeForm()">Annuler</button>
+        <button class="btn-save" (click)="saveMaterial()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showMovementForm && movementMaterial) {
+  <div class="modal-overlay" (click)="closeMovementForm()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h2>Mouvement — {{ movementMaterial.name }}</h2>
+      <p class="current-qty">
+        Quantité actuelle : <strong>{{ movementMaterial.quantity }} {{ movementMaterial.unit }}</strong>
+      </p>
+
+      <label>Type
+        <select [(ngModel)]="movement.type" name="type">
+          <option value="ENTREE">Entrée</option>
+          <option value="SORTIE">Sortie</option>
+        </select>
+      </label>
+      <label>Quantité
+        <input type="number" [(ngModel)]="movement.quantity" name="movQuantity" />
+      </label>
+      <label>Raison
+        <input [(ngModel)]="movement.reason" name="reason" />
+      </label>
+
+      @if (movementError) {
+        <p class="error-msg">{{ movementError }}</p>
+      }
+
+      <div class="modal-actions">
+        <button class="btn-cancel" (click)="closeMovementForm()">Fermer</button>
+        <button class="btn-save" (click)="saveMovement()">Valider le mouvement</button>
+      </div>
+
+      <h3 class="history-title">Historique</h3>
+      @if (movements.length === 0) {
+        <p class="empty">Aucun mouvement enregistré.</p>
+      } @else {
+        <ul class="history">
+          @for (mv of movements; track mv.id) {
+            <li>
+              <span [class]="'mv-type mv-' + mv.type.toLowerCase()">{{ mv.type }}</span>
+              <span>{{ mv.quantity }}</span>
+              <span class="mv-reason">{{ mv.reason }}</span>
+              <span class="mv-date">{{ mv.movementDate | date:'short' }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </div>
+
+}
+}
+</main>
+  

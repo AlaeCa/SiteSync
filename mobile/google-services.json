@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "98655238859",
+    "project_id": "sitesync-d33a1",
+    "storage_bucket": "sitesync-d33a1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:98655238859:android:96849cb58a9aa99213b94e",
+        "android_client_info": {
+          "package_name": "com.sitesync.stock"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCgV_ZYtJlrZy38BhwqT-9CHaOoShc3gY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
