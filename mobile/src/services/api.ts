@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://192.168.1.154:8081/api';
+const API_URL = 'http://192.168.1.7:8080/api';
 // 10.0.2.2 = localhost depuis un émulateur Android
 // Si tu testes sur ton vrai téléphone, remplace par ton IP locale ex: http://192.168.1.X:8081/api
 
@@ -15,9 +15,8 @@ const api = axios.create({
 // Ajoute automatiquement le token JWT à chaque requête
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  console.log('TOKEN ENVOYÉ:', token?.slice(0, 20));
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 

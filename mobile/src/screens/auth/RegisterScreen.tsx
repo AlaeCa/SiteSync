@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert,
-  KeyboardAvoidingView, Platform, ScrollView
+  Text, TextInput, TouchableOpacity,
+  StyleSheet, ActivityIndicator, Alert, ScrollView
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '../../config/firebase';
 import { authAPI } from '../../services/api';
+
+// Récupère le jeton quelle que soit la forme de la réponse
+// (au cas où le backend enveloppe dans { data: {...} })
+function extractToken(d: any): string | undefined {
+  const t = d?.token ?? d?.accessToken ?? d?.jwt ?? d?.data?.token ?? d?.data?.accessToken;
+  return typeof t === 'string' && t.length > 0 ? t : undefined;
+}
+function extractField(d: any, key: string) {
+  return d?.[key] ?? d?.data?.[key];
+}
 
 export default function RegisterScreen({ navigation }: any) {
   const [name, setName] = useState('');
@@ -21,69 +28,80 @@ export default function RegisterScreen({ navigation }: any) {
       Alert.alert('Erreur', 'Veuillez remplir les champs obligatoires');
       return;
     }
+    if (password.length < 6) {
+      Alert.alert('Erreur', 'Mot de passe trop court (min. 6 caractères)');
+      return;
+    }
     setLoading(true);
     try {
-      // 1. Créer le compte Firebase
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // 2. Mettre à jour le nom dans Firebase
-      await updateProfile(userCredential.user, { displayName: name });
-      
-      // 3. Récupérer le token Firebase
-      const idToken = await userCredential.user.getIdToken();
+      // 1. Créer le compte
+      const reg = await authAPI.register({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        phone: phone.trim() || undefined,
+      });
+      console.log('REGISTER RESPONSE', JSON.stringify(reg.data));
 
-      // 4. Envoyer au backend pour créer dans MongoDB
-      const response = await authAPI.firebaseLogin(idToken);
-      const { token, id, role } = response.data;
+      // 2. Se connecter pour obtenir un jeton fiable
+      const log = await authAPI.login({ email: email.trim(), password });
+      console.log('LOGIN RESPONSE', JSON.stringify(log.data));
 
-      // 5. Sauvegarder localement
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('userId', id);
-      await AsyncStorage.setItem('userName', name);
-      await AsyncStorage.setItem('userRole', role);
-      await AsyncStorage.setItem('userEmail', email);
+      const token = extractToken(log.data);
+      const id = extractField(log.data, 'id') ?? extractField(log.data, 'userId');
+      const role = extractField(log.data, 'role') ?? 'USER';
 
-      Alert.alert('Succès', 'Compte créé avec succès !', [
-        { text: 'OK', onPress: () => navigation.replace('Profile') }
-      ]);
-    } catch (error: any) {
-      let message = 'Erreur lors de l\'inscription';
-      if (error.code === 'auth/email-already-in-use') {
-        message = 'Cet email est déjà utilisé';
-      } else if (error.code === 'auth/weak-password') {
-        message = 'Mot de passe trop faible (min. 6 caractères)';
+      if (!token) {
+        // Pas de jeton récupérable : on renvoie vers la connexion manuelle
+        Alert.alert('Compte créé', 'Connecte-toi avec ton email et ton mot de passe.', [
+          { text: 'OK', onPress: () => navigation.replace('Login') },
+        ]);
+        return;
       }
-      Alert.alert('Erreur', message);
+
+      // 3. Sauvegarder une session valide
+      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('userId', String(id ?? ''));
+      await AsyncStorage.setItem('userName', name.trim());
+      await AsyncStorage.setItem('userRole', String(role ?? 'USER'));
+      await AsyncStorage.setItem('userEmail', email.trim());
+
+      navigation.replace('Main');
+    } catch (error: any) {
+      const msg = error.response?.data?.message
+        || error.response?.data
+        || error.message
+        || "Erreur lors de l'inscription";
+      Alert.alert('Erreur', typeof msg === 'string' ? msg : "Erreur lors de l'inscription");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
+    <ScrollView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      contentContainerStyle={styles.inner}
+      keyboardShouldPersistTaps="handled"
     >
-      <ScrollView contentContainerStyle={styles.inner}>
-        <Text style={styles.title}>SiteSync</Text>
-        <Text style={styles.subtitle}>Créer un nouveau compte</Text>
+      <Text style={styles.title}>SiteSync</Text>
+      <Text style={styles.subtitle}>Créer un nouveau compte</Text>
 
-        <TextInput style={styles.input} placeholder="Nom complet *" placeholderTextColor="#999" value={name} onChangeText={setName} />
-        <TextInput style={styles.input} placeholder="Email *" placeholderTextColor="#999" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-        <TextInput style={styles.input} placeholder="Mot de passe * (min. 6 caractères)" placeholderTextColor="#999" value={password} onChangeText={setPassword} secureTextEntry />
-        <TextInput style={styles.input} placeholder="Téléphone (optionnel)" placeholderTextColor="#999" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+      <TextInput style={styles.input} placeholder="Nom complet *" placeholderTextColor="#999" value={name} onChangeText={setName} />
+      <TextInput style={styles.input} placeholder="Email *" placeholderTextColor="#999" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+      <TextInput style={styles.input} placeholder="Mot de passe * (min. 6 caractères)" placeholderTextColor="#999" value={password} onChangeText={setPassword} secureTextEntry />
+      <TextInput style={styles.input} placeholder="Téléphone (optionnel)" placeholderTextColor="#999" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
 
-        <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>S'inscrire</Text>}
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>S'inscrire</Text>}
+      </TouchableOpacity>
 
-        <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.linkText}>
-            Déjà un compte ? <Text style={styles.linkBold}>Se connecter</Text>
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
+        <Text style={styles.linkText}>
+          Déjà un compte ? <Text style={styles.linkBold}>Se connecter</Text>
+        </Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 

@@ -23,7 +23,7 @@ export class LoginComponent {
     this.loading = true;
     this.error = '';
 
-    this.http.post<any>('http://localhost:8081/api/auth/login', {
+    this.http.post<any>('http://localhost:8080/api/auth/login', {
       email: this.email,
       password: this.password
     }).subscribe({

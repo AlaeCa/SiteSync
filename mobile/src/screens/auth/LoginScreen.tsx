@@ -4,55 +4,12 @@ import {
   StyleSheet, ActivityIndicator, Alert, KeyboardAvoidingView, Platform
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import { auth } from '../../config/firebase';
 import { authAPI } from '../../services/api';
-
-WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-
-  const [request, response, promptAsync] = Google.useAuthRequest({
-  webClientId: '4878729515-a8mnu17cdu8klhsfo8bp4cebupa24k34.apps.googleusercontent.com',
-  androidClientId: '4878729515-4l1p79777i9vcige6dc8pu5640tq8vgk.apps.googleusercontent.com',
-});
-
-  React.useEffect(() => {
-    if (response?.type === 'success') {
-      handleGoogleResponse(response);
-    }
-  }, [response]);
-
-  const handleGoogleResponse = async (response: any) => {
-    setGoogleLoading(true);
-    try {
-      const { id_token } = response.params;
-      const credential = GoogleAuthProvider.credential(id_token);
-      const userCredential = await signInWithCredential(auth, credential);
-      const idToken = await userCredential.user.getIdToken();
-
-      const res = await authAPI.firebaseLogin(idToken);
-      const { token, id, name, role } = res.data;
-
-      await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('userId', id);
-      await AsyncStorage.setItem('userName', name);
-      await AsyncStorage.setItem('userRole', role);
-      await AsyncStorage.setItem('userEmail', userCredential.user.email || '');
-
-      navigation.replace('Profile');
-    } catch (error: any) {
-      Alert.alert('Erreur', 'Connexion Google échouée');
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -61,20 +18,34 @@ export default function LoginScreen({ navigation }: any) {
     }
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await userCredential.user.getIdToken();
-      const response = await authAPI.firebaseLogin(idToken);
-      const { token, id, name, role } = response.data;
+      // Flux A : email + mot de passe envoyés directement au backend commun
+      const response = await authAPI.login({ email: email.trim(), password });
+      console.log('LOGIN RESPONSE', JSON.stringify(response.data));
+
+      const data = response.data || {};
+      const token = data.token ?? data.accessToken ?? data.jwt;
+      const id = data.id ?? data.userId ?? data._id ?? data.user?.id;
+      const name = data.name ?? data.user?.name ?? '';
+      const role = data.role ?? data.user?.role ?? 'USER';
+
+      if (!token) {
+        Alert.alert('Erreur', "Le serveur n'a pas renvoyé de jeton. Regarde le log LOGIN RESPONSE.");
+        return;
+      }
 
       await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('userId', id);
-      await AsyncStorage.setItem('userName', name);
-      await AsyncStorage.setItem('userRole', role);
-      await AsyncStorage.setItem('userEmail', email);
+      await AsyncStorage.setItem('userId', String(id ?? ''));
+      await AsyncStorage.setItem('userName', String(name ?? ''));
+      await AsyncStorage.setItem('userRole', String(role ?? 'USER'));
+      await AsyncStorage.setItem('userEmail', email.trim());
 
-      navigation.replace('Profile');
+      navigation.replace('Main');
     } catch (error: any) {
-      Alert.alert('Erreur', error.response?.data || error.message || 'Erreur de connexion');
+      const msg = error.response?.data?.message
+        || error.response?.data
+        || error.message
+        || 'Erreur de connexion';
+      Alert.alert('Erreur', typeof msg === 'string' ? msg : 'Identifiants incorrects');
     } finally {
       setLoading(false);
     }
@@ -86,29 +57,26 @@ export default function LoginScreen({ navigation }: any) {
         <Text style={styles.title}>SiteSync</Text>
         <Text style={styles.subtitle}>Connectez-vous à votre compte</Text>
 
-        <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#999" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-        <TextInput style={styles.input} placeholder="Mot de passe" placeholderTextColor="#999" value={password} onChangeText={setPassword} secureTextEntry />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#999"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Mot de passe"
+          placeholderTextColor="#999"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
         <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Se connecter</Text>}
-        </TouchableOpacity>
-
-        <View style={styles.divider}>
-          <View style={styles.line} />
-          <Text style={styles.orText}>OU</Text>
-          <View style={styles.line} />
-        </View>
-
-        <TouchableOpacity
-          style={styles.googleButton}
-          onPress={() => promptAsync()}
-          disabled={!request || googleLoading}
-        >
-          {googleLoading ? (
-            <ActivityIndicator color="#333" />
-          ) : (
-            <Text style={styles.googleText}>🔵 Se connecter avec Google</Text>
-          )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Register')}>
@@ -131,11 +99,6 @@ const styles = StyleSheet.create({
   input: { backgroundColor: '#16213e', color: '#fff', borderRadius: 12, padding: 16, marginBottom: 16, fontSize: 16, borderWidth: 1, borderColor: '#0f3460' },
   button: { backgroundColor: '#ff6b35', borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 8 },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 20 },
-  line: { flex: 1, height: 1, backgroundColor: '#0f3460' },
-  orText: { color: '#aaa', marginHorizontal: 10 },
-  googleButton: { backgroundColor: '#fff', borderRadius: 12, padding: 16, alignItems: 'center', marginBottom: 8 },
-  googleText: { color: '#333', fontSize: 16, fontWeight: 'bold' },
   linkButton: { marginTop: 16, alignItems: 'center' },
   linkText: { color: '#aaa', fontSize: 15 },
   linkBold: { color: '#ff6b35', fontWeight: 'bold' },
